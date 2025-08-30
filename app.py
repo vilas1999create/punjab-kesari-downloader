@@ -8,7 +8,6 @@ import subprocess
 # Ensure Playwright Chromium is installed (needed on Streamlit Cloud)
 subprocess.run(["playwright", "install", "chromium"], check=True)
 
-
 # Patch event loop for Streamlit
 nest_asyncio.apply()
 
@@ -17,7 +16,6 @@ USERNAME = "punkesari123@sjgoel.33mail.com"
 PASSWORD = "iD54^2I#L$"
 LOGIN_URL = "https://epaper.punjabkesari.in/login"
 # ----------------------------
-
 
 async def fetch_pages(page, url, edition_name):
     """Navigate, zoom, and fetch xl.png image URLs for a given edition"""
@@ -41,7 +39,6 @@ async def fetch_pages(page, url, edition_name):
     print(f"✅ {edition_name}: Found {len(img_links)} pages")
     return img_links
 
-
 async def run(date_str):
     final_pdf = f"Ludhiana_Bathinda_{date_str}.pdf"
 
@@ -51,7 +48,6 @@ async def run(date_str):
             args=["--no-sandbox", "--disable-dev-shm-usage"]
         )
         page = await browser.new_page()
-
 
         # 1. Login
         await page.goto(LOGIN_URL)
@@ -89,7 +85,6 @@ async def run(date_str):
         images[0].save(final_pdf, save_all=True, append_images=images[1:])
 
     return final_pdf
-
 
 # ---------- STREAMLIT UI ----------
 st.title("📰 Punjab Kesari E-Paper Downloader")
