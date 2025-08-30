@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright
 from PIL import Image
 from datetime import datetime
 
-# Patch event loop
+# Patch event loop for Gradio
 nest_asyncio.apply()
 
 # ---------- CONFIG ----------
@@ -12,7 +12,6 @@ USERNAME = "punkesari123@sjgoel.33mail.com"
 PASSWORD = "iD54^2I#L$"
 LOGIN_URL = "https://epaper.punjabkesari.in/login"
 # ----------------------------
-
 
 async def fetch_pages(page, url, edition_name):
     """Navigate, zoom, and fetch xl.png image URLs for a given edition"""
@@ -41,10 +40,7 @@ async def run(date_str):
     final_pdf = f"Ludhiana_Bathinda_{date_str}.pdf"
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"]
-        )
+        browser = await p.chromium.launch(headless=True, args=["--no-sandbox"])
         page = await browser.new_page()
 
         # 1. Login
@@ -85,20 +81,38 @@ async def run(date_str):
     return final_pdf
 
 
+def fetch_newspaper(date_str):
+    """Wrapper for Gradio: takes text, enforces YYYY-MM-DD format, returns PDF"""
+    try:
+        # Validate format
+        dt = datetime.strptime(date_str.strip(), "%Y-%m-%d")
+        clean_date = dt.strftime("%Y-%m-%d")
+    except Exception as e:
+        return None, f"❌ Invalid date. Please use YYYY-MM-DD. Error: {e}"
+
+    # Run the async downloader
+    pdf_file = asyncio.run(run(clean_date))
+
+    return pdf_file, f"✅ Newspaper ready for {clean_date}"
+
+
 # ---------- GRADIO UI ----------
-def fetch_newspaper(date):
-    date_str = date.strftime("%Y-%m-%d")
-    final_pdf = asyncio.run(run(date_str))
-    return final_pdf
-
-
 with gr.Blocks() as demo:
     gr.Markdown("# 📰 Punjab Kesari E-Paper Downloader")
-    date_input = gr.DateTime(label="Choose a date", value=datetime.today(), type="date")
+
+    date_input = gr.Textbox(
+        label="Enter date (YYYY-MM-DD)",
+        placeholder="e.g. 2025-08-30"
+    )
+
     output_file = gr.File(label="Download Newspaper PDF")
+    status = gr.Textbox(label="Status", interactive=False)
 
-    btn = gr.Button("Fetch Newspaper")
-    btn.click(fn=fetch_newspaper, inputs=date_input, outputs=output_file)
+    fetch_btn = gr.Button("Fetch Newspaper")
+    fetch_btn.click(
+        fn=fetch_newspaper,
+        inputs=date_input,
+        outputs=[output_file, status]
+    )
 
-if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+demo.launch(server_port=7860, server_name="0.0.0.0")
