@@ -3,6 +3,11 @@ import nest_asyncio, asyncio, os, aiohttp, aiofiles, glob, shutil
 from playwright.async_api import async_playwright
 from PIL import Image
 from datetime import datetime
+import subprocess
+
+# Ensure Playwright Chromium is installed (needed on Streamlit Cloud)
+subprocess.run(["playwright", "install", "chromium"], check=True)
+
 
 # Patch event loop for Streamlit
 nest_asyncio.apply()
