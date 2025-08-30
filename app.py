@@ -94,7 +94,7 @@ def fetch_newspaper(date):
 
 with gr.Blocks() as demo:
     gr.Markdown("# 📰 Punjab Kesari E-Paper Downloader")
-    date_input = gr.DatePicker(label="Choose a date", value=datetime.today())
+    date_input = gr.DateTime(label="Choose a date", value=datetime.today(), type="date")
     output_file = gr.File(label="Download Newspaper PDF")
 
     btn = gr.Button("Fetch Newspaper")
