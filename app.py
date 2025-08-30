@@ -1,14 +1,10 @@
-import streamlit as st
+import gradio as gr
 import nest_asyncio, asyncio, os, aiohttp, aiofiles, glob, shutil
 from playwright.async_api import async_playwright
 from PIL import Image
 from datetime import datetime
-import subprocess
 
-# Ensure Playwright Chromium is installed (needed on Streamlit Cloud)
-subprocess.run(["playwright", "install", "chromium"], check=True)
-
-# Patch event loop for Streamlit
+# Patch event loop
 nest_asyncio.apply()
 
 # ---------- CONFIG ----------
@@ -16,6 +12,7 @@ USERNAME = "punkesari123@sjgoel.33mail.com"
 PASSWORD = "iD54^2I#L$"
 LOGIN_URL = "https://epaper.punjabkesari.in/login"
 # ----------------------------
+
 
 async def fetch_pages(page, url, edition_name):
     """Navigate, zoom, and fetch xl.png image URLs for a given edition"""
@@ -38,6 +35,7 @@ async def fetch_pages(page, url, edition_name):
     img_links = list(dict.fromkeys(img_links))  # dedupe
     print(f"✅ {edition_name}: Found {len(img_links)} pages")
     return img_links
+
 
 async def run(date_str):
     final_pdf = f"Ludhiana_Bathinda_{date_str}.pdf"
@@ -86,21 +84,21 @@ async def run(date_str):
 
     return final_pdf
 
-# ---------- STREAMLIT UI ----------
-st.title("📰 Punjab Kesari E-Paper Downloader")
 
-# Pick a date
-date = st.date_input("Choose a date", datetime.today())
-date_str = date.strftime("%Y-%m-%d")
+# ---------- GRADIO UI ----------
+def fetch_newspaper(date):
+    date_str = date.strftime("%Y-%m-%d")
+    final_pdf = asyncio.run(run(date_str))
+    return final_pdf
 
-if st.button("Fetch Newspaper"):
-    with st.spinner("Fetching and preparing PDF..."):
-        final_pdf = asyncio.run(run(date_str))
-    with open(final_pdf, "rb") as f:
-        st.download_button(
-            label="📥 Download Newspaper PDF",
-            data=f,
-            file_name=final_pdf,
-            mime="application/pdf"
-        )
-    st.success("✅ Newspaper ready!")
+
+with gr.Blocks() as demo:
+    gr.Markdown("# 📰 Punjab Kesari E-Paper Downloader")
+    date_input = gr.Date(label="Choose a date", value=datetime.today())
+    output_file = gr.File(label="Download Newspaper PDF")
+
+    btn = gr.Button("Fetch Newspaper")
+    btn.click(fn=fetch_newspaper, inputs=date_input, outputs=output_file)
+
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0", server_port=7860)
