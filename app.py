@@ -46,8 +46,12 @@ async def run(date_str):
     final_pdf = f"Ludhiana_Bathinda_{date_str}.pdf"
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"]
+        )
         page = await browser.new_page()
+
 
         # 1. Login
         await page.goto(LOGIN_URL)
